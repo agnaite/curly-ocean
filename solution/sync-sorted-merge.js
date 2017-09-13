@@ -1,50 +1,30 @@
 'use strict'
 
+const binarySearchInsert = require('binary-search-insert')
+const mergeSort = require('mergesort')
+
 module.exports = (logSources, printer) => {
+  const logs = [];
+  const comparator = function (a, b) { return a.date - b.date; }
 
-  const entries = []
-  logSources.forEach(logSource => {
-    let newEntry = logSource.pop()
-    while (newEntry) {
-      entries.push(newEntry)
-      newEntry = logSource.pop()
-    }
-  });
-  const sortedEntries = mergeSort(entries);
+  logSources.forEach((logSource) => {
+    logs.push(logSource.pop())
+  })
 
-  sortedEntries.forEach(entry => {
-    printer.print(entry)
-  });
+  let sortedArray = mergeSort(comparator, logs);
+  let oldest = sortedArray.shift()
 
-  printer.done();
-}
+  while (true) {
+    let oldest = sortedArray.shift()
+    let idx = logs.indexOf(oldest)
+    let log = logSources[idx].pop()
 
-var mergeSort = (arr) => {
-  if (arr.length < 2)
-    return arr
+    printer.print(oldest)
 
-  var middle = parseInt(arr.length / 2)
-  var left   = arr.slice(0, middle)
-  var right  = arr.slice(middle, arr.length)
+    if (!log) { break }
 
-  return merge(mergeSort(left), mergeSort(right))
-}
-
-var merge = (left, right) => {
-  var result = []
-  while (left.length && right.length) {
-    if (left[0].date <= right[0].date) {
-      result.push(left.shift())
-    } else {
-      result.push(right.shift())
-    }
+    logs[idx] = log
+    binarySearchInsert(sortedArray, comparator, log)
   }
-
-  while (left.length)
-    result.push(left.shift())
-
-  while (right.length)
-    result.push(right.shift())
-
-  return result
+  printer.done()
 }
